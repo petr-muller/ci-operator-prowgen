@@ -288,7 +288,8 @@ func generateJobsFromDirectory(configDir, jobDir, jobFile string) error {
 			fmt.Fprintf(os.Stderr, "Error encontered while generating Prow job config: %v\n", err)
 			return err
 		}
-		if !info.IsDir() && filepath.Ext(path) == ".yaml" {
+		extension := filepath.Ext(path)
+		if !info.IsDir() && (extension == ".yaml" || extension == ".json") {
 			jobConfig, repoInfo, err := generateProwJobsFromConfigFile(path)
 			if err != nil {
 				return err
@@ -314,59 +315,6 @@ func generateJobsFromDirectory(configDir, jobDir, jobFile string) error {
 	return nil
 }
 
-// Given two JobConfig, merge jobs from the `source` one to to `destination`
-// one. Jobs are matched by name. All jobs from `source` will be present in
-// `destination` - if there were jobs with the same name in `destination`, they
-// will be overwritten. All jobs in `destination` that are not overwritten this
-// way stay untouched.
-func mergeJobConfig(destination, source *prowconfig.JobConfig) {
-	// We do the same thing for both Presubmits and Postsubmits
-	if source.Presubmits != nil {
-		if destination.Presubmits == nil {
-			destination.Presubmits = map[string][]prowconfig.Presubmit{}
-		}
-		for repo, jobs := range source.Presubmits {
-			oldPresubmits, _ := destination.Presubmits[repo]
-			destination.Presubmits[repo] = []prowconfig.Presubmit{}
-			newJobs := map[string]prowconfig.Presubmit{}
-			for _, job := range jobs {
-				newJobs[job.Name] = job
-			}
-			for _, newJob := range source.Presubmits[repo] {
-				destination.Presubmits[repo] = append(destination.Presubmits[repo], newJob)
-			}
-
-			for _, oldJob := range oldPresubmits {
-				if _, hasKey := newJobs[oldJob.Name]; !hasKey {
-					destination.Presubmits[repo] = append(destination.Presubmits[repo], oldJob)
-				}
-			}
-		}
-	}
-	if source.Postsubmits != nil {
-		if destination.Postsubmits == nil {
-			destination.Postsubmits = map[string][]prowconfig.Postsubmit{}
-		}
-		for repo, jobs := range source.Postsubmits {
-			oldPostsubmits, _ := destination.Postsubmits[repo]
-			destination.Postsubmits[repo] = []prowconfig.Postsubmit{}
-			newJobs := map[string]prowconfig.Postsubmit{}
-			for _, job := range jobs {
-				newJobs[job.Name] = job
-			}
-			for _, newJob := range source.Postsubmits[repo] {
-				destination.Postsubmits[repo] = append(destination.Postsubmits[repo], newJob)
-			}
-
-			for _, oldJob := range oldPostsubmits {
-				if _, hasKey := newJobs[oldJob.Name]; !hasKey {
-					destination.Postsubmits[repo] = append(destination.Postsubmits[repo], oldJob)
-				}
-			}
-		}
-	}
-}
-
 // Given a JobConfig and a file path, write YAML representation of the config
 // to the file path. If the file already contains some jobs, new ones will be
 // merged with the existing ones.
@@ -376,7 +324,7 @@ func mergeJobsIntoFile(prowConfigPath string, jobConfig *prowconfig.JobConfig) e
 		existingJobConfig = &prowconfig.JobConfig{}
 	}
 
-	mergeJobConfig(existingJobConfig, jobConfig)
+	jc.Merge(existingJobConfig, jobConfig)
 
 	if err = jc.WriteToFile(prowConfigPath, existingJobConfig); err != nil {
 		return err

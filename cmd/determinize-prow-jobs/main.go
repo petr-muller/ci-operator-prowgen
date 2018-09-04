@@ -46,7 +46,7 @@ func determinizeJobs(prowJobConfigDir string) error {
 		}
 		return nil
 	}); err != nil {
-		return fmt.Errorf("Failed to determinize all Prow jobs")
+		return fmt.Errorf("failed to determinize all Prow jobs (%v)", err)
 	}
 
 	return nil
