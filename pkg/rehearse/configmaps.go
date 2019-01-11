@@ -82,6 +82,7 @@ func (c *configMapClientWithDry) Create(cm *v1.ConfigMap) (*v1.ConfigMap, error)
 	return c.ConfigMapInterface.Create(cm)
 }
 
+// NewConfigMapClient creates a ConfigMap client with a dry run capability
 func NewConfigMapClient(clusterConfig *rest.Config, namespace string, dry bool) (corev1.ConfigMapInterface, error) {
 	cmcset, err := corev1.NewForConfig(clusterConfig)
 	if err != nil {

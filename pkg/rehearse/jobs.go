@@ -24,6 +24,7 @@ type prowJobClientWithDry struct {
 	dry bool
 }
 
+// NewProwJobClient creates a ProwJob client with a dry run capability
 func NewProwJobClient(clusterConfig *rest.Config, namespace string, dry bool) (pj.ProwJobInterface, error) {
 	pjcset, err := pjclientset.NewForConfig(clusterConfig)
 	if err != nil {
