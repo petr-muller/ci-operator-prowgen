@@ -26,6 +26,11 @@ import (
 
 var ciOperatorConfigsCMName = "ci-operator-configs"
 
+// CIOperatorConfigs processes Presubmits and detects if they depend on having
+// ci-operator configuration ConfigMap available. If yes, it patches the jobs
+// to use the same keys from a different, temporary ConfigMap. It accumulates
+// which keys do all jobs processed need and afterwards can create the temporary
+// ConfigMap to which the jobs were patched.
 type CIOperatorConfigs interface {
 	FixupJob(job *prowconfig.Presubmit, repo string)
 	Create() error
