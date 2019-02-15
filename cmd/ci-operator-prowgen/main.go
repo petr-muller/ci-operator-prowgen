@@ -249,6 +249,7 @@ func generatePresubmitForTest(name string, repoInfo *configFilePathElements, pod
 	}
 
 	newTrue := true
+	branch := makeBranchExplicit(repoInfo.branch)
 
 	return &prowconfig.Presubmit{
 		JobBase: prowconfig.JobBase{
@@ -262,7 +263,7 @@ func generatePresubmitForTest(name string, repoInfo *configFilePathElements, pod
 			},
 		},
 		AlwaysRun:    true,
-		Brancher:     prowconfig.Brancher{Branches: []string{repoInfo.branch}},
+		Brancher:     prowconfig.Brancher{Branches: []string{branch}},
 		Context:      fmt.Sprintf("ci/prow/%s", name),
 		RerunCommand: fmt.Sprintf("/test %s", name),
 		Trigger:      fmt.Sprintf(`(?m)^/test (?:.*? )?%s(?: .*?)?$`, name),
@@ -273,7 +274,6 @@ func generatePresubmitForTest(name string, repoInfo *configFilePathElements, pod
 func generatePostsubmitForTest(
 	name string,
 	repoInfo *configFilePathElements,
-	treatBranchesAsExplicit bool,
 	labels map[string]string,
 	podSpec *kubeapi.PodSpec) *prowconfig.Postsubmit {
 
@@ -294,12 +294,8 @@ func generatePostsubmitForTest(
 		logrus.WithField("name", jobName).Warn("Generated job name is longer than 63 characters. This may cause issues when Prow attempts to label resources with job name. Consider a shorter name.")
 	}
 
-	branch := repoInfo.branch
-	if treatBranchesAsExplicit {
-		branch = makeBranchExplicit(branch)
-	}
-
 	newTrue := true
+	branch := makeBranchExplicit(repoInfo.branch)
 
 	return &prowconfig.Postsubmit{
 		JobBase: prowconfig.JobBase{
@@ -409,7 +405,7 @@ func generateJobs(
 
 		// If we have and explicit promotion config, let's respect that. Otherwise, validate if the branch matches promotion target
 		if configSpec.PromotionConfiguration != nil || shouldBePromoted(repoInfo.branch, promotionNamespace, promotionName) {
-			postsubmits[orgrepo] = append(postsubmits[orgrepo], *generatePostsubmitForTest("images", repoInfo, true, labels, generatePodSpec(repoInfo.configFilename, "[images]", additionalPostsubmitArgs...)))
+			postsubmits[orgrepo] = append(postsubmits[orgrepo], *generatePostsubmitForTest("images", repoInfo, labels, generatePodSpec(repoInfo.configFilename, "[images]", additionalPostsubmitArgs...)))
 		}
 	}
 

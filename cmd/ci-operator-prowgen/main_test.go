@@ -310,7 +310,7 @@ func TestGeneratePresubmitForTest(t *testing.T) {
 				},
 			},
 			AlwaysRun:    true,
-			Brancher:     prowconfig.Brancher{Branches: []string{"branch"}},
+			Brancher:     prowconfig.Brancher{Branches: []string{"^branch$"}},
 			Context:      "ci/prow/testname",
 			RerunCommand: "/test testname",
 			Trigger:      "(?m)^/test (?:.*? )?testname(?: .*?)?$",
@@ -330,8 +330,6 @@ func TestGeneratePostSubmitForTest(t *testing.T) {
 		name     string
 		repoInfo *configFilePathElements
 		labels   map[string]string
-
-		treatBranchesAsExplicit bool
 
 		expected *prowconfig.Postsubmit
 	}{
@@ -355,7 +353,7 @@ func TestGeneratePostSubmitForTest(t *testing.T) {
 					},
 				},
 
-				Brancher: prowconfig.Brancher{Branches: []string{"branch"}},
+				Brancher: prowconfig.Brancher{Branches: []string{"^branch$"}},
 			},
 		},
 		{
@@ -377,7 +375,7 @@ func TestGeneratePostSubmitForTest(t *testing.T) {
 						DecorationConfig: &prowkube.DecorationConfig{SkipCloning: &newTrue},
 						Decorate:         true,
 					}},
-				Brancher: prowconfig.Brancher{Branches: []string{"Branch"}},
+				Brancher: prowconfig.Brancher{Branches: []string{"^Branch$"}},
 			},
 		},
 		{
@@ -389,8 +387,6 @@ func TestGeneratePostSubmitForTest(t *testing.T) {
 				configFilename: "config.yaml",
 			},
 			labels: map[string]string{"artifacts": "images"},
-
-			treatBranchesAsExplicit: true,
 
 			expected: &prowconfig.Postsubmit{
 				JobBase: prowconfig.JobBase{
@@ -415,8 +411,6 @@ func TestGeneratePostSubmitForTest(t *testing.T) {
 			},
 			labels: map[string]string{"artifacts": "images"},
 
-			treatBranchesAsExplicit: true,
-
 			expected: &prowconfig.Postsubmit{
 				JobBase: prowconfig.JobBase{
 					Agent:  "kubernetes",
@@ -431,7 +425,7 @@ func TestGeneratePostSubmitForTest(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		postsubmit := generatePostsubmitForTest(tc.name, tc.repoInfo, tc.treatBranchesAsExplicit, tc.labels, nil) // podSpec tested in TestGeneratePodSpec
+		postsubmit := generatePostsubmitForTest(tc.name, tc.repoInfo, tc.labels, nil) // podSpec tested in TestGeneratePodSpec
 		if !equality.Semantic.DeepEqual(postsubmit, tc.expected) {
 			t.Errorf("expected postsubmit diff:\n%s", diff.ObjectDiff(tc.expected, postsubmit))
 		}
@@ -850,7 +844,7 @@ tests:
   - agent: kubernetes
     always_run: true
     branches:
-    - branch
+    - ^branch$
     context: ci/prow/images
     decorate: true
     decoration_config:
@@ -882,7 +876,7 @@ tests:
   - agent: kubernetes
     always_run: true
     branches:
-    - branch
+    - ^branch$
     context: ci/prow/unit
     decorate: true
     decoration_config:
@@ -986,7 +980,7 @@ tests:
   - agent: kubernetes
     always_run: true
     branches:
-    - branch
+    - ^branch$
     context: ci/prow/rhel-images
     decorate: true
     decoration_config:
@@ -1020,7 +1014,7 @@ tests:
   - agent: kubernetes
     always_run: true
     branches:
-    - branch
+    - ^branch$
     context: ci/prow/rhel-unit
     decorate: true
     decoration_config:
@@ -1189,7 +1183,7 @@ tests:
   - agent: kubernetes
     always_run: true
     branches:
-    - branch
+    - ^branch$
     context: ci/prow/images
     decorate: true
     decoration_config:
@@ -1221,7 +1215,7 @@ tests:
   - agent: kubernetes
     always_run: true
     branches:
-    - branch
+    - ^branch$
     context: ci/prow/unit
     decorate: true
     decoration_config:
